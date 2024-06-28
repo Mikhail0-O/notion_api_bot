@@ -1,23 +1,24 @@
 import os
 from pprint import pprint
 from time import sleep
+import json
 
 from dotenv import load_dotenv
 import requests
-from notion_client import Client
 
 
 load_dotenv()
 
-# notion = Client(auth="secret_B0Jrq6DHhPnYp72JDDpk0AHtugEQLJ3WBBlfWnJhv7t")
-# database_id = "67e8d4a3c141440a98ead7b0a474905d"
-# response = notion.databases.retrieve(database_id=database_id)
+
 NOTION_TOKEN = os.getenv('NOTION_TOKEN')
-NOTION_DATABASE_ID = os.getenv('NOTION_DATABASE_ID')
+NOTION_DATABASE_ID = os.getenv('NOTION_DATABSE_ID')
 HEADERS = {'Authorization': f'Bearer {NOTION_TOKEN}',
            'Notion-Version': '2022-06-28'}
-ENDPOINT = "https://api.notion.com/v1/blocks/67e8d4a3-c141-440a-98ea-d7b0a474905d/children"
+ENDPOINT = f"https://api.notion.com/v1/blocks/{NOTION_DATABASE_ID}/children"
 response = requests.get(ENDPOINT, headers=HEADERS)
+
+with open('db.json', 'w', encoding='utf8') as f:
+    json.dump(response.json(), f, ensure_ascii=False, indent=4)
 
 
 def get_api_response(block_id):
@@ -57,7 +58,6 @@ for i in response.json()['results']:
                 else:
                     break
                 get_results(current_page_response)
-
 print(stack_content)
 # 67e8d4a3-c141-440a-98ea-d7b0a474905d
 # dc9d6211-ca18-48c8-9814-9dc1b67e7c7b
