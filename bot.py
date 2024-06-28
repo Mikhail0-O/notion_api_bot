@@ -23,17 +23,18 @@ HEADERS = {'Authorization': f'Bearer {NOTION_TOKEN}',
 #     json.dump(response.json(), f, ensure_ascii=False, indent=4)
 
 
-def get_api_response(block_id):
+async def get_api_response(session, block_id):
     """Запрашиваем потомков блока по id."""
     endpoint = f"https://api.notion.com/v1/blocks/{block_id}/children"
     try:
-        response = requests.get(endpoint, headers=HEADERS)
-        return response.json()
-    except requests.RequestException as error:
+        async with session.get(endpoint, headers=HEADERS) as response:
+            return await response.json()
+    except aiohttp.ClientError as error:
         print(error)
+        return None
 
 
-def get_results(response):
+def get_results(response, stack_id, stack_content):
     """Обработка результатов запроса."""
     results = response.get('results')
     for result in results:
@@ -46,16 +47,21 @@ def get_results(response):
             stack_content.append(content)
 
 
-stack_id = [NOTION_DATABASE_ID]
-stack_content: list = []
-while stack_id:
-    pprint(stack_id)
-    sleep(0.5)
-    if stack_id:
-        current_page_response = get_api_response(stack_id.pop(0))
-    get_results(current_page_response)
-print(stack_content)
+async def main():
+    stack_id = [NOTION_DATABASE_ID]
+    stack_content: list = []
+    async with aiohttp.ClientSession() as session:
+        while stack_id:
+            pprint(stack_id)
+            block_id = stack_id.pop(0)
+            response = await get_api_response(session, block_id)
+            get_results(response, stack_id, stack_content)
 
+    print(stack_content)
+
+
+if __name__ == '__main__':
+    asyncio.get_event_loop().run_until_complete(main())
 
 
 # Пример ответа
