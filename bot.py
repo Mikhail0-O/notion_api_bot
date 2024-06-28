@@ -23,15 +23,23 @@ HEADERS = {'Authorization': f'Bearer {NOTION_TOKEN}',
 #     json.dump(response.json(), f, ensure_ascii=False, indent=4)
 
 
-async def get_api_response(session, block_id):
+async def get_api_response(session, block_id, retries=5, delay=1):
     """Запрашиваем потомков блока по id."""
     endpoint = f"https://api.notion.com/v1/blocks/{block_id}/children"
-    try:
-        async with session.get(endpoint, headers=HEADERS) as response:
-            return await response.json()
-    except aiohttp.ClientError as error:
-        print(error)
-        return None
+    for attempt in range(retries):
+        try:
+            async with session.get(endpoint, headers=HEADERS) as response:
+                if response.status == 429:
+                    retry_after = int(response.headers.get(
+                        'Повтор через:', delay))
+                    await asyncio.sleep(retry_after)
+                    return await response.json()
+                else:
+                    response.raise_for_status()
+                    return await response.json()
+        except aiohttp.ClientError as error:
+            print(f"Попытка: {attempt + 1} failed: {error}")
+            await asyncio.sleep(delay * (2 ** attempt))
 
 
 def get_results(response, stack_id, stack_content):
