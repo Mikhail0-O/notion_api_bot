@@ -1,0 +1,23 @@
+GET https://api.notion.com/v1/blocks/75d92d1e-7148-450a-8574-8a50a170a489/children
+Authorization: Bearer secret_B0Jrq6DHhPnYp72JDDpk0AHtugEQLJ3WBBlfWnJhv7t
+Notion-Version: 2022-06-28
+
+###
+GET https://api.notion.com/v1/blocks/eab1626a-1b06-4398-84c0-6424d4039651/
+Authorization: Bearer secret_B0Jrq6DHhPnYp72JDDpk0AHtugEQLJ3WBBlfWnJhv7t
+Notion-Version: 2022-06-28
+
+###
+GET https://api.notion.com/v1/blocks/cc947537-74c0-4e21-8279-ad7f8610c504/
+Authorization: Bearer secret_B0Jrq6DHhPnYp72JDDpk0AHtugEQLJ3WBBlfWnJhv7t
+Notion-Version: 2022-06-28
+
+###
+GET https://api.notion.com/v1/blocks/2c7e5a38-99e4-41f5-b34b-1bc774c01d07/
+Authorization: Bearer secret_B0Jrq6DHhPnYp72JDDpk0AHtugEQLJ3WBBlfWnJhv7t
+Notion-Version: 2022-06-28
+
+###
+GET https://api.notion.com/v1/blocks/67e8d4a3-c141-440a-98ea-d7b0a474905d/children
+Authorization: Bearer secret_B0Jrq6DHhPnYp72JDDpk0AHtugEQLJ3WBBlfWnJhv7t
+Notion-Version: 2022-06-28
