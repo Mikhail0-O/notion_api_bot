@@ -1,31 +1,13 @@
-import os
 from pprint import pprint
-from time import sleep
 import json
 import asyncio
 import logging
 from http import HTTPStatus
 
-from dotenv import load_dotenv
-import requests
 import aiohttp
-from telebot import TeleBot
 
-
-load_dotenv()
-
-
-ALLOWED_USERS = os.getenv('ALLOWED_USERS')
-
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-
-NOTION_TOKEN = os.getenv('NOTION_TOKEN')
-NOTION_DATABASE_ID = os.getenv('NOTION_DATABASE_ID')
-HEADERS = {'Authorization': f'Bearer {NOTION_TOKEN}',
-           'Notion-Version': '2022-06-28'}
-RETRY_GET_DATA_PERIOD = 3600
+from settings import (NOTION_DATABASE_ID,
+                      HEADERS, )
 
 
 async def get_api_response(session, block_id, delay=1):
@@ -142,9 +124,7 @@ def parser():
     # asyncio.get_event_loop().run_until_complete(get_data())
     loop.run_until_complete(get_data())
     loop.close()
-    logger.debug(
-        f'Данные успешно собраны. '
-        f'Повтоорный сбор данных через {RETRY_GET_DATA_PERIOD} сек')
+    logger.debug('Данные успешно собраны.')
 
 
 LOG_FORMAT = '%(asctime)s, %(levelname)s, %(message)s, %(name)s'

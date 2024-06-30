@@ -6,148 +6,24 @@ import asyncio
 import logging
 from http import HTTPStatus
 
-from dotenv import load_dotenv
 import requests
 import aiohttp
-from telebot import TeleBot
+from telebot import TeleBot, types
 import threading
 
 from parse_data import parser
+from get_random_card import get_random_card
+from settings import (ALLOWED_USERS, TELEGRAM_TOKEN,
+                      TELEGRAM_CHAT_ID, TELEGRAM_CHAT_BOT_ID)
 
 
-load_dotenv()
-
-
-ALLOWED_USERS = os.getenv('ALLOWED_USERS')
-
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-
-NOTION_TOKEN = os.getenv('NOTION_TOKEN')
-NOTION_DATABASE_ID = os.getenv('NOTION_DATABASE_ID')
-HEADERS = {'Authorization': f'Bearer {NOTION_TOKEN}',
-           'Notion-Version': '2022-06-28'}
-RETRY_GET_DATA_PERIOD = 3600
-
-
-async def get_api_response(session, block_id, delay=1):
-    """Запрашиваем потомков блока по id."""
-    endpoint = f"https://api.notion.com/v1/blocks/{block_id}/children"
-    attempt = 0
-    while True:
-        try:
-            async with session.get(endpoint, headers=HEADERS,
-                                   raise_for_status=False) as response:
-                if response.status == HTTPStatus.OK:
-                    return await response.json()
-                elif response.status in {HTTPStatus.TOO_MANY_REQUESTS,
-                                         HTTPStatus.SERVICE_UNAVAILABLE}:
-                    message = (f'Ошибка сервера. Статус ответа: '
-                               f'{response.status}, '
-                               f'Повторный запрос через: {delay} cек')
-                    retry_after = int(response.headers.get(
-                        'Retry-After', delay))
-                    delay += 1
-                    logger.error(message)
-                    await asyncio.sleep(retry_after)
-                response.raise_for_status()
-        except aiohttp.ClientError as error:
-            attempt = attempt + 1
-            message = (f'Ошибка: {error}'
-                       f'Попытка: {attempt} '
-                       f'Повторный запрос через: {delay * (2 ** attempt)} сек')
-            logger.error(message)
-            await asyncio.sleep(delay * (2 ** attempt))
-
-
-def get_results(response, stack_id, all_data, parent, titles):
-    """Обработка результатов запроса."""
-    results = response.get('results', [])
-
-    for result in results:
-        data = {}
-
-        # Обработка дочерней страницы
-        if result.get('child_page'):
-            parent_id = (result.get('parent').get('database_id')
-                         or result.get('parent').get('page_id'))
-            child_id = result.get('id')
-            child_title = result.get('child_page').get('title')
-
-            if parent_id:
-                found = False
-                for i in range(len(parent)):
-                    if parent[i][-1] == parent_id:
-                        parent[i].append(child_id)
-                        titles[i].append(child_title)
-                        found = True
-                        break
-
-                if not found:
-                    new_parent_entry = [parent_id, child_id]
-                    new_titles_entry = [child_title]
-                    for i in range(len(parent)):
-                        if (parent[i][-1] == parent_id
-                                or parent[i][-2] == parent_id):
-                            new_parent_entry = parent[i][:-1] + [child_id]
-                            new_titles_entry = titles[i][:-1] + [child_title]
-                            parent.append(new_parent_entry)
-                            titles.append(new_titles_entry)
-                            found = True
-                            break
-                    if not found:
-                        parent.append(new_parent_entry)
-                        titles.append(new_titles_entry)
-
-            stack_id.append(child_id)
-
-        # Достаем content и title
-        if result.get('callout'):
-            current_title_index = next(
-                i for i, parent_list in enumerate(parent)
-                if parent_list[-1] == result.get('parent').get('page_id')
-            )
-
-            data.update(title=' --> '.join(titles[current_title_index]))
-
-            callout = result.get('callout')
-            rich_text = callout.get('rich_text', [])
-            content = ''.join(i['text']['content'] for i in rich_text)
-            data.update(text=content)
-
-            URL = (f"https://www.notion.so/"
-                   f"{parent[current_title_index][-1].replace('-', '')}/")
-            data.update(URL=URL)
-
-            all_data.append(data)
-
-
-async def get_data():
-    stack_id = [NOTION_DATABASE_ID]
-    all_data = []
-    parent = []
-    titles = []
-    async with aiohttp.ClientSession() as session:
-        while stack_id:
-            pprint(stack_id)
-            block_id = stack_id.pop(0)
-            response = await get_api_response(session, block_id)
-            get_results(response, stack_id, all_data, parent, titles)
-
-    with open('db.json', 'w', encoding='utf8') as f:
-        json.dump(all_data, f, ensure_ascii=False, indent=4)
-
-
-def send_message(bot, message):
+def send_message(bot, message, menu):
 
     """Отправляет сообщение в Telegram-чат."""
 
     try:
-        bot.send_message(TELEGRAM_CHAT_ID, message)
-
+        bot.send_message(TELEGRAM_CHAT_ID, message, parse_mode="html", reply_markup=menu)
         logger.debug('Сообщение успешно отправлено')
-
     except Exception as error:
         logger.error(f'Сообщение не отправлено: {error}')
 
@@ -156,16 +32,87 @@ def is_user_allowed(user_id):
     return user_id in ALLOWED_USERS.split(', ')
 
 
+def create_menu():
+    # Создаем объект клавиатуры
+    keyboard = types.InlineKeyboardMarkup()
+
+    # Добавляем кнопки к клавиатуре
+    start_button = types.InlineKeyboardButton(
+        text="Старт", callback_data="start"
+    )
+    get_card_button = types.InlineKeyboardButton(
+        text="Отправить карточку",
+        callback_data="get_card"
+    )
+    parse_data_button = types.InlineKeyboardButton(
+        text="Кнопка 3",
+        callback_data="parse_data"
+    )
+
+    # Добавляем кнопки в клавиатуру (в один ряд)
+    keyboard.row(start_button, get_card_button, parse_data_button)
+
+    # Можно также добавлять кнопки в несколько рядов:
+    # keyboard.row(button1, button2)
+    # keyboard.add(button3)
+
+    return keyboard
+
+
 def main():
     bot = TeleBot(token=TELEGRAM_TOKEN)
 
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
+        message_for_allowed_users = (
+            '<b>Добро пожаловать!</b> У вас есть доступ к этому боту.\n'
+            '\n'
+            '/start - запуск бота.\n'
+            '\n'
+            '/parse_data - запустить сбор данных.\n'
+            '\n'
+            '/get_card - получить рандомную карточку.')
+        message_for_any_users = 'Извините, у вас нет доступа к этому боту.'
+        user_id = str(message.chat.id)
+        menu = create_menu()
+        if is_user_allowed(user_id):
+            send_message(bot, message_for_allowed_users, menu)
+        else:
+            send_message(bot, message_for_any_users)
+
+    @bot.message_handler(commands=['parse_data'])
+    def parse_new_data(message):
+        message_for_allowed_users = ('Идет процесс сбора данных...'
+                                     'Это может занять несколько минут.')
+        message_for_any_users = ('Команда не существует')
+        massege_parse_data_complete = 'Данные успешно собраны'
+        massege_parse_data_error = 'Данные не собраны'
         user_id = str(message.chat.id)
         if is_user_allowed(user_id):
-            bot.reply_to(message, "Добро пожаловать! У вас есть доступ к этому боту. /start")
+            send_message(bot, message_for_allowed_users)
+            try:
+                parser()
+            except Exception as error:
+                logger.error(f'{massege_parse_data_error}: {error}')
+                send_message(bot, massege_parse_data_error)
+            else:
+                send_message(bot, massege_parse_data_complete)
         else:
-            bot.reply_to(message, "Извините, у вас нет доступа к этому боту.")
+            send_message(bot, message_for_any_users)
+
+    @bot.message_handler(commands=['get_card'])
+    def get_card(message):
+        message_for_any_users = ('Команда не существует')
+        massege_parse_data_error = 'Произошла ошибка...('
+        user_id = str(message.chat.id)
+        if is_user_allowed(user_id):
+            try:
+                send_message(bot, get_random_card())
+            except Exception as error:
+                logger.error(f'{massege_parse_data_error}: {error}')
+                send_message(bot, massege_parse_data_error)
+        else:
+            send_message(bot, message_for_any_users)
 
     @bot.message_handler(func=lambda message: True)
     def handle_message(message):
@@ -175,17 +122,20 @@ def main():
         else:
             bot.reply_to(message, "Извините, у вас нет доступа к этому боту.")
 
+    @bot.callback_query_handler(func=lambda call: True)
+    def callback_query(call):
+        if call.data == "start":
+            send_welcome(call.message)
+        elif call.data == "get_card":
+            # bot.answer_callback_query(call.id, "Вы нажали кнопку 2")
+        elif call.data == "parse_dta":
+            # bot.answer_callback_query(call.id, "Вы нажали кнопку 3")
+
     # bot.polling(interval=5, timeout=20)
-    bot_thread = threading.Thread(target=bot.polling(interval=5, timeout=20), args=(bot,), daemon=True)
+    bot_thread = threading.Thread(
+        target=bot.polling(
+            interval=5, timeout=20), args=(bot,), daemon=True)
     bot_thread.start()
-    # bot_thread = threading.Thread(target=lambda: bot.polling(interval=5, timeout=20), args=(), daemon=True)
-    # bot_thread.start()
-    # while True:
-    #     asyncio.get_event_loop().run_until_complete(get_data())
-    #     logger.debug(
-    #         f'Данные успешно собраны. '
-    #         f'Повтоорный сбор данных через {RETRY_GET_DATA_PERIOD} сек')
-        # sleep(RETRY_GET_DATA_PERIOD)
 
 
 if __name__ == '__main__':
