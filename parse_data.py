@@ -27,7 +27,6 @@ async def get_api_response(session, block_id, delay=1):
                                f'Повторный запрос через: {delay} cек')
                     retry_after = int(response.headers.get(
                         'Retry-After', delay))
-                    delay += 1
                     logger.error(message)
                     await asyncio.sleep(retry_after)
                 response.raise_for_status()

@@ -17,7 +17,7 @@ from settings import (ALLOWED_USERS, TELEGRAM_TOKEN,
                       TELEGRAM_CHAT_ID, TELEGRAM_CHAT_BOT_ID)
 
 
-def send_message(bot, message, menu):
+def send_message(bot, message, menu=None):
 
     """Отправляет сообщение в Telegram-чат."""
 
@@ -45,12 +45,13 @@ def create_menu():
         callback_data="get_card"
     )
     parse_data_button = types.InlineKeyboardButton(
-        text="Кнопка 3",
+        text="Собрать данные",
         callback_data="parse_data"
     )
 
     # Добавляем кнопки в клавиатуру (в один ряд)
-    keyboard.row(start_button, get_card_button, parse_data_button)
+    keyboard.add(get_card_button)
+    keyboard.row(start_button, parse_data_button)
 
     # Можно также добавлять кнопки в несколько рядов:
     # keyboard.row(button1, button2)
@@ -65,7 +66,7 @@ def main():
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
         message_for_allowed_users = (
-            '<b>Добро пожаловать!</b> У вас есть доступ к этому боту.\n'
+            '<b>Добро пожаловать!</b>\n'
             '\n'
             '/start - запуск бота.\n'
             '\n'
@@ -105,9 +106,10 @@ def main():
         message_for_any_users = ('Команда не существует')
         massege_parse_data_error = 'Произошла ошибка...('
         user_id = str(message.chat.id)
+        menu = create_menu()
         if is_user_allowed(user_id):
             try:
-                send_message(bot, get_random_card())
+                send_message(bot, get_random_card(), menu)
             except Exception as error:
                 logger.error(f'{massege_parse_data_error}: {error}')
                 send_message(bot, massege_parse_data_error)
@@ -127,14 +129,15 @@ def main():
         if call.data == "start":
             send_welcome(call.message)
         elif call.data == "get_card":
-            # bot.answer_callback_query(call.id, "Вы нажали кнопку 2")
-        elif call.data == "parse_dta":
-            # bot.answer_callback_query(call.id, "Вы нажали кнопку 3")
+            bot.answer_callback_query(call.id)
+            get_card(call.message)
+        elif call.data == "parse_data":
+            parse_new_data(call.message)
 
-    # bot.polling(interval=5, timeout=20)
+    # bot.polling(interval=3, timeout=20)
     bot_thread = threading.Thread(
         target=bot.polling(
-            interval=5, timeout=20), args=(bot,), daemon=True)
+            interval=3, timeout=20), args=(bot,), daemon=True)
     bot_thread.start()
 
 
