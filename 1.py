@@ -1,4 +1,6 @@
-# import json
+import json
+
+from random import choice
 # from time import sleep
 
 # from exceptions import RequestError
@@ -22,4 +24,9 @@
 #         raise RequestError(f'Неизвестная ошибка HTTP-запроса: {error}')
 #     sleep(5)
 
-print([1, 2, 3, 4, 5, 6][:-2])
+# a = 'sdfsdf-sdfds-sdf'
+# b = a.replace('-', '')
+# print(b)
+with open('db.json', 'r', encoding='utf8') as json_file:
+    data = json.load(json_file)
+    print(choice(data))

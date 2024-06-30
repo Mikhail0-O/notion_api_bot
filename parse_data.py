@@ -10,9 +10,6 @@ from dotenv import load_dotenv
 import requests
 import aiohttp
 from telebot import TeleBot
-import threading
-
-from parse_data import parser
 
 
 load_dotenv()
@@ -139,95 +136,27 @@ async def get_data():
         json.dump(all_data, f, ensure_ascii=False, indent=4)
 
 
-def send_message(bot, message):
-
-    """Отправляет сообщение в Telegram-чат."""
-
-    try:
-        bot.send_message(TELEGRAM_CHAT_ID, message)
-
-        logger.debug('Сообщение успешно отправлено')
-
-    except Exception as error:
-        logger.error(f'Сообщение не отправлено: {error}')
+def parser():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    # asyncio.get_event_loop().run_until_complete(get_data())
+    loop.run_until_complete(get_data())
+    loop.close()
+    logger.debug(
+        f'Данные успешно собраны. '
+        f'Повтоорный сбор данных через {RETRY_GET_DATA_PERIOD} сек')
 
 
-def is_user_allowed(user_id):
-    return user_id in ALLOWED_USERS.split(', ')
+LOG_FORMAT = '%(asctime)s, %(levelname)s, %(message)s, %(name)s'
+LOG_FORMATER = logging.Formatter(LOG_FORMAT)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
+stream_handler = logging.FileHandler(
+    'main.log',
+    mode='a',
+    encoding='utf-8'
+)
+stream_handler.setFormatter(LOG_FORMATER)
 
-def main():
-    bot = TeleBot(token=TELEGRAM_TOKEN)
-
-    @bot.message_handler(commands=['start'])
-    def send_welcome(message):
-        user_id = str(message.chat.id)
-        if is_user_allowed(user_id):
-            bot.reply_to(message, "Добро пожаловать! У вас есть доступ к этому боту. /start")
-        else:
-            bot.reply_to(message, "Извините, у вас нет доступа к этому боту.")
-
-    @bot.message_handler(func=lambda message: True)
-    def handle_message(message):
-        user_id = str(message.chat.id)
-        if is_user_allowed(user_id):
-            bot.reply_to(message, "Бот пока не умеет общаться, используйте команды.")
-        else:
-            bot.reply_to(message, "Извините, у вас нет доступа к этому боту.")
-
-    # bot.polling(interval=5, timeout=20)
-    bot_thread = threading.Thread(target=bot.polling(interval=5, timeout=20), args=(bot,), daemon=True)
-    bot_thread.start()
-    # bot_thread = threading.Thread(target=lambda: bot.polling(interval=5, timeout=20), args=(), daemon=True)
-    # bot_thread.start()
-    # while True:
-    #     asyncio.get_event_loop().run_until_complete(get_data())
-    #     logger.debug(
-    #         f'Данные успешно собраны. '
-    #         f'Повтоорный сбор данных через {RETRY_GET_DATA_PERIOD} сек')
-        # sleep(RETRY_GET_DATA_PERIOD)
-
-
-if __name__ == '__main__':
-    LOG_FORMAT = '%(asctime)s, %(levelname)s, %(message)s, %(name)s'
-    LOG_FORMATER = logging.Formatter(LOG_FORMAT)
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-
-    stream_handler = logging.FileHandler(
-        'main.log',
-        mode='a',
-        encoding='utf-8'
-    )
-    stream_handler.setFormatter(LOG_FORMATER)
-
-    logger.addHandler(stream_handler)
-    main()
-
-
-# Пример ответа
-# {
-#       "object": "block",
-#       "id": "92caa944-00a7-4e91-860a-5de4b59f20ec",
-#       "parent": {
-#         "type": "database_id",
-#         "database_id": "67e8d4a3-c141-440a-98ea-d7b0a474905d"
-#       },
-#       "created_time": "2024-02-04T19:18:00.000Z",
-#       "last_edited_time": "2024-06-26T16:05:00.000Z",
-#       "created_by": {
-#         "object": "user",
-#         "id": "0d6c3117-661e-4680-9397-1a01a6d1557c"
-#       },
-#       "last_edited_by": {
-#         "object": "user",
-#         "id": "0d6c3117-661e-4680-9397-1a01a6d1557c"
-#       },
-#       "has_children": true,
-#       "archived": false,
-#       "in_trash": false,
-#       "type": "child_page",
-#       "child_page": {
-#         "title": "Python"
-#       }
-# },
+logger.addHandler(stream_handler)
