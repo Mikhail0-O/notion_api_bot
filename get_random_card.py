@@ -15,4 +15,5 @@ def get_random_card():
         return message
 
 
-get_random_card()
+if __name__ == '__main__':
+    print(get_random_card())

@@ -13,16 +13,18 @@ import threading
 
 from parse_data import parser
 from get_random_card import get_random_card
-from settings import (ALLOWED_USERS, TELEGRAM_TOKEN,
-                      TELEGRAM_CHAT_ID, TELEGRAM_CHAT_BOT_ID)
+from settings import (ALLOWED_USERS, TELEGRAM_TOKEN,)
 
 
-def send_message(bot, message, menu=None):
+parse_lock = threading.Lock()
+
+
+def send_message(bot, message, user_id, menu=None):
 
     """Отправляет сообщение в Telegram-чат."""
 
     try:
-        bot.send_message(TELEGRAM_CHAT_ID, message, parse_mode="html", reply_markup=menu)
+        bot.send_message(user_id, message, parse_mode="html", reply_markup=menu)
         logger.debug('Сообщение успешно отправлено')
     except Exception as error:
         logger.error(f'Сообщение не отправлено: {error}')
@@ -77,9 +79,9 @@ def main():
         user_id = str(message.chat.id)
         menu = create_menu()
         if is_user_allowed(user_id):
-            send_message(bot, message_for_allowed_users, menu)
+            send_message(bot, message_for_allowed_users, user_id, menu)
         else:
-            send_message(bot, message_for_any_users)
+            send_message(bot, message_for_any_users, user_id)
 
     @bot.message_handler(commands=['parse_data'])
     def parse_new_data(message):
@@ -90,16 +92,18 @@ def main():
         massege_parse_data_error = 'Данные не собраны'
         user_id = str(message.chat.id)
         if is_user_allowed(user_id):
-            send_message(bot, message_for_allowed_users)
+            send_message(bot, message_for_allowed_users, user_id)
             try:
-                parser()
+                with parse_lock:
+                    parser()
+                    logger.debug('Данные успешно собраны.')
             except Exception as error:
                 logger.error(f'{massege_parse_data_error}: {error}')
-                send_message(bot, massege_parse_data_error)
+                send_message(bot, massege_parse_data_error, user_id)
             else:
-                send_message(bot, massege_parse_data_complete)
+                send_message(bot, massege_parse_data_complete, user_id)
         else:
-            send_message(bot, message_for_any_users)
+            send_message(bot, message_for_any_users, user_id)
 
     @bot.message_handler(commands=['get_card'])
     def get_card(message):
@@ -109,12 +113,12 @@ def main():
         menu = create_menu()
         if is_user_allowed(user_id):
             try:
-                send_message(bot, get_random_card(), menu)
+                send_message(bot, get_random_card(), user_id, menu)
             except Exception as error:
                 logger.error(f'{massege_parse_data_error}: {error}')
-                send_message(bot, massege_parse_data_error)
+                send_message(bot, massege_parse_data_error, user_id)
         else:
-            send_message(bot, message_for_any_users)
+            send_message(bot, message_for_any_users, user_id)
 
     @bot.message_handler(func=lambda message: True)
     def handle_message(message):
@@ -127,17 +131,29 @@ def main():
     @bot.callback_query_handler(func=lambda call: True)
     def callback_query(call):
         if call.data == "start":
+            bot.answer_callback_query(call.id)
             send_welcome(call.message)
         elif call.data == "get_card":
             bot.answer_callback_query(call.id)
             get_card(call.message)
         elif call.data == "parse_data":
-            parse_new_data(call.message)
+            bot.answer_callback_query(call.id)
+            if parse_lock.locked():
+                bot.send_message(
+                    call.message.chat.id,
+                    "Процесс парсинга уже запущен, пожалуйста, подождите."
+                )
+            else:
+                threading.Thread(
+                    target=parse_new_data,
+                    args=(call.message,), daemon=True
+                ).start()
 
     # bot.polling(interval=3, timeout=20)
     bot_thread = threading.Thread(
-        target=bot.polling(
-            interval=3, timeout=20), args=(bot,), daemon=True)
+        target=bot.polling(interval=3, timeout=20),
+        args=(bot,), daemon=True
+    )
     bot_thread.start()
 
 
@@ -147,40 +163,12 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
 
-    stream_handler = logging.FileHandler(
+    file_handler = logging.FileHandler(
         'main.log',
         mode='a',
         encoding='utf-8'
     )
-    stream_handler.setFormatter(LOG_FORMATER)
+    file_handler.setFormatter(LOG_FORMATER)
 
-    logger.addHandler(stream_handler)
+    logger.addHandler(file_handler)
     main()
-
-
-# Пример ответа
-# {
-#       "object": "block",
-#       "id": "92caa944-00a7-4e91-860a-5de4b59f20ec",
-#       "parent": {
-#         "type": "database_id",
-#         "database_id": "67e8d4a3-c141-440a-98ea-d7b0a474905d"
-#       },
-#       "created_time": "2024-02-04T19:18:00.000Z",
-#       "last_edited_time": "2024-06-26T16:05:00.000Z",
-#       "created_by": {
-#         "object": "user",
-#         "id": "0d6c3117-661e-4680-9397-1a01a6d1557c"
-#       },
-#       "last_edited_by": {
-#         "object": "user",
-#         "id": "0d6c3117-661e-4680-9397-1a01a6d1557c"
-#       },
-#       "has_children": true,
-#       "archived": false,
-#       "in_trash": false,
-#       "type": "child_page",
-#       "child_page": {
-#         "title": "Python"
-#       }
-# },

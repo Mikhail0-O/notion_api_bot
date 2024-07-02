@@ -1,4 +1,5 @@
 from pprint import pprint
+from time import time
 import json
 import asyncio
 import logging
@@ -108,7 +109,6 @@ async def get_data():
     titles = []
     async with aiohttp.ClientSession() as session:
         while stack_id:
-            pprint(stack_id)
             block_id = stack_id.pop(0)
             response = await get_api_response(session, block_id)
             get_results(response, stack_id, all_data, parent, titles)
@@ -118,12 +118,12 @@ async def get_data():
 
 
 def parser():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
     # asyncio.get_event_loop().run_until_complete(get_data())
-    loop.run_until_complete(get_data())
-    loop.close()
-    logger.debug('Данные успешно собраны.')
+    # loop = asyncio.new_event_loop()
+    # asyncio.set_event_loop(loop)
+    # loop.run_until_complete(get_data())
+    # loop.close()
+    asyncio.run(get_data())
 
 
 LOG_FORMAT = '%(asctime)s, %(levelname)s, %(message)s, %(name)s'
@@ -131,11 +131,18 @@ LOG_FORMATER = logging.Formatter(LOG_FORMAT)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-stream_handler = logging.FileHandler(
+file_handler = logging.FileHandler(
     'main.log',
     mode='a',
     encoding='utf-8'
 )
-stream_handler.setFormatter(LOG_FORMATER)
+file_handler.setFormatter(LOG_FORMATER)
 
-logger.addHandler(stream_handler)
+logger.addHandler(file_handler)
+
+start = time()
+parser()
+logger.debug('Данные успешно собраны.')
+
+finish = time()
+print(finish - start)
