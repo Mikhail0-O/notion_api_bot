@@ -109,6 +109,7 @@ async def get_data():
     titles = []
     async with aiohttp.ClientSession() as session:
         while stack_id:
+            print(stack_id)
             block_id = stack_id.pop(0)
             response = await get_api_response(session, block_id)
             get_results(response, stack_id, all_data, parent, titles)
@@ -119,11 +120,12 @@ async def get_data():
 
 def parser():
     # asyncio.get_event_loop().run_until_complete(get_data())
-    # loop = asyncio.new_event_loop()
-    # asyncio.set_event_loop(loop)
-    # loop.run_until_complete(get_data())
-    # loop.close()
-    asyncio.run(get_data())
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(get_data())
+    loop.close()
+    logger.debug('Данные успешно собраны.')
+    # asyncio.run(get_data())
 
 
 LOG_FORMAT = '%(asctime)s, %(levelname)s, %(message)s, %(name)s'
@@ -143,6 +145,5 @@ logger.addHandler(file_handler)
 start = time()
 parser()
 logger.debug('Данные успешно собраны.')
-
 finish = time()
-print(finish - start)
+logger.debug(finish - start)
