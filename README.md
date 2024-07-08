@@ -7,9 +7,7 @@
 ![3](https://github.com/Mikhail0-O/notion_api_bot/assets/156952363/721e81e7-7282-44a9-a784-72ac4d38329a)
 
 ### Аутентификация
-Для работы с конспектами Notion надо получить интеграционный токен и получить id базы данных
-
-### Документация к Notion API: https://developers.notion.com/docs/getting-started
+Для работы с конспектами Notion надо получить интеграционный токен и получить id базы данных согласно документации к Notion API: https://developers.notion.com/docs/getting-started
 
 
 ### Как запустить проект:
