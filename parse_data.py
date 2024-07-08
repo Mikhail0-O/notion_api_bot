@@ -1,14 +1,16 @@
-from pprint import pprint
 from time import time
 import json
 import asyncio
-import logging
 from http import HTTPStatus
+from itertools import count
 
 import aiohttp
 
 from settings import (NOTION_DATABASE_ID,
-                      HEADERS, )
+                      HEADERS, logger)
+
+
+autoincrement = count(start=1)
 
 
 async def get_api_response(session, block_id, delay=1):
@@ -43,6 +45,7 @@ async def get_api_response(session, block_id, delay=1):
 def get_results(response, stack_id, all_data, parent, titles):
     """Обработка результатов запроса."""
     results = response.get('results', [])
+    flag_code = False
 
     for result in results:
         data = {}
@@ -83,23 +86,47 @@ def get_results(response, stack_id, all_data, parent, titles):
 
         # Достаем content и title
         if result.get('callout'):
+            card_number = next(autoincrement)
+            data.update(card_number=card_number)
             current_title_index = next(
                 i for i, parent_list in enumerate(parent)
                 if parent_list[-1] == result.get('parent').get('page_id')
             )
 
-            data.update(title=' --> '.join(titles[current_title_index]))
+            title = ' --> '.join(titles[current_title_index])
+            data.update(title=title)
 
             callout = result.get('callout')
             rich_text = callout.get('rich_text', [])
             content = ''.join(i['text']['content'] for i in rich_text)
+
             data.update(text=content)
 
             URL = (f"https://www.notion.so/"
                    f"{parent[current_title_index][-1].replace('-', '')}/")
+
+            content_code = None
+
+            data.update(code=content_code)
             data.update(URL=URL)
 
             all_data.append(data)
+            if content[-1] == ':':
+                flag_code = True
+                continue
+
+        if flag_code:
+            flag_code = False
+            code = result.get('code')
+            if code:
+                rich_text = code.get('rich_text', [])
+                content_code = ''.join(i['text']['content'] for i in rich_text)
+                del all_data[-1]['code']
+                all_data[-1].update(code=content_code)
+                URL = (f"https://www.notion.so/"
+                       f"{parent[current_title_index][-1].replace('-', '')}/")
+                del all_data[-1]['URL']
+                all_data[-1].update(URL=URL)
 
 
 async def get_data():
@@ -119,31 +146,13 @@ async def get_data():
 
 
 def parser():
-    # asyncio.get_event_loop().run_until_complete(get_data())
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(get_data())
-    loop.close()
+    asyncio.run(get_data())
     logger.debug('Данные успешно собраны.')
-    # asyncio.run(get_data())
 
 
-LOG_FORMAT = '%(asctime)s, %(levelname)s, %(message)s, %(name)s'
-LOG_FORMATER = logging.Formatter(LOG_FORMAT)
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-file_handler = logging.FileHandler(
-    'main.log',
-    mode='a',
-    encoding='utf-8'
-)
-file_handler.setFormatter(LOG_FORMATER)
-
-logger.addHandler(file_handler)
-
-start = time()
-parser()
-logger.debug('Данные успешно собраны.')
-finish = time()
-logger.debug(finish - start)
+if __name__ == "__main__":
+    start = time()
+    parser()
+    logger.debug('Данные успешно собраны.')
+    finish = time()
+    logger.debug(finish - start)

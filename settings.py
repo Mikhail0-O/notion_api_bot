@@ -1,4 +1,6 @@
+import logging.handlers
 import os
+import logging
 
 from dotenv import load_dotenv
 
@@ -23,3 +25,20 @@ HEADERS = {'Authorization': f'Bearer {NOTION_TOKEN}',
 RETRY_GET_DATA_PERIOD = 3600
 
 TELEGRAM_CHAT_BOT_ID = os.getenv('TELEGRAM_CHAT_BOT_ID')
+
+PRIORITY_OF_GROUPS = (1, 1, 1, 2, 2, 3)
+
+# Логирование
+LOG_FORMAT = '%(asctime)s, %(levelname)s, %(message)s, %(name)s'
+LOG_FORMATER = logging.Formatter(LOG_FORMAT)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+rotating_file_handler = logging.handlers.RotatingFileHandler(
+    'main.log',
+    maxBytes=10000000,
+    backupCount=5,
+    encoding='utf-8'
+)
+rotating_file_handler.setFormatter(LOG_FORMATER)
+logger.addHandler(rotating_file_handler)
