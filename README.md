@@ -15,7 +15,7 @@
 ```
 git clone https://github.com/Mikhail0-O/notion_api_bot.git
 
-cd yatube_api
+cd notion_api_bot
 ```
 Cоздать и активировать виртуальное окружение:
 ```
@@ -28,12 +28,4 @@ source venv/Scripts/activate
 python -m pip install --upgrade pip
 
 pip install -r requirements.txt
-```
-Выполнить миграции:
-```
-python manage.py migrate
-```
-Запустить проект:
-```
-python manage.py runserver
 ```
