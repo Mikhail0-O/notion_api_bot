@@ -1,8 +1,9 @@
 import threading
+import asyncio
 
 from telebot import TeleBot, types
 
-from parse_data import parser
+from parse_data import parse_data
 from get_random_card import get_random_card
 from settings import (ALLOWED_USERS, TELEGRAM_TOKEN, logger)
 from refresh_db import refresh_db
@@ -104,7 +105,7 @@ def main():
                 bot, message_for_allowed_users, user_id)
             try:
                 with parse_lock:
-                    parser()
+                    asyncio.run(parse_data())
                     refresh_db()
             except Exception as error:
                 logger.error(f'{massege_parse_data_error}: {error}')

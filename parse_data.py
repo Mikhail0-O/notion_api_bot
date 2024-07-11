@@ -1,45 +1,17 @@
-from time import time
 import json
 import asyncio
-from http import HTTPStatus
 from itertools import count
+from http import HTTPStatus
 
 import aiohttp
 
+
 from settings import (NOTION_DATABASE_ID,
                       HEADERS, logger)
+from async_timed import async_timed
 
 
 autoincrement = count(start=1)
-
-
-async def get_api_response(session, block_id, delay=1):
-    """Запрашиваем потомков блока по id."""
-    endpoint = f"https://api.notion.com/v1/blocks/{block_id}/children"
-    attempt = 0
-    while True:
-        try:
-            async with session.get(endpoint, headers=HEADERS,
-                                   raise_for_status=False) as response:
-                if response.status == HTTPStatus.OK:
-                    return await response.json()
-                elif response.status in {HTTPStatus.TOO_MANY_REQUESTS,
-                                         HTTPStatus.SERVICE_UNAVAILABLE}:
-                    message = (f'Ошибка сервера. Статус ответа: '
-                               f'{response.status}, '
-                               f'Повторный запрос через: {delay} cек')
-                    retry_after = int(response.headers.get(
-                        'Retry-After', delay))
-                    logger.error(message)
-                    await asyncio.sleep(retry_after)
-                response.raise_for_status()
-        except aiohttp.ClientError as error:
-            attempt = attempt + 1
-            message = (f'Ошибка: {error}'
-                       f'Попытка: {attempt} '
-                       f'Повторный запрос через: {delay * (2 ** attempt)} сек')
-            logger.error(message)
-            await asyncio.sleep(delay * (2 ** attempt))
 
 
 def get_results(response, stack_id, all_data, parent, titles):
@@ -111,6 +83,7 @@ def get_results(response, stack_id, all_data, parent, titles):
             data.update(URL=URL)
 
             all_data.append(data)
+
             if content[-1] == ':':
                 flag_code = True
                 continue
@@ -129,7 +102,27 @@ def get_results(response, stack_id, all_data, parent, titles):
                 all_data[-1].update(URL=URL)
 
 
-async def get_data():
+async def get_api_response(session, block_id, delay=1):
+    """Запрашиваем потомков блока по id."""
+    endpoint = f"https://api.notion.com/v1/blocks/{block_id}/children"
+    attempt = 0
+    while True:
+        try:
+            async with session.get(endpoint, headers=HEADERS,
+                                   raise_for_status=True) as response:
+                if response.status == HTTPStatus.OK:
+                    return await response.json()
+        except aiohttp.ClientError as error:
+            attempt = attempt + 1
+            message = (f'Ошибка: {error}'
+                       f'Попытка: {attempt} '
+                       f'Повторный запрос через: {delay * (2 ** attempt)} сек')
+            logger.error(message)
+            await asyncio.sleep(delay * (2 ** attempt))
+
+
+@async_timed()
+async def parse_data():
     stack_id = [NOTION_DATABASE_ID]
     all_data = []
     parent = []
@@ -137,22 +130,18 @@ async def get_data():
     async with aiohttp.ClientSession() as session:
         while stack_id:
             print(stack_id)
-            block_id = stack_id.pop(0)
-            response = await get_api_response(session, block_id)
-            get_results(response, stack_id, all_data, parent, titles)
+            current_len_stack_id = len(stack_id)
+            requests = [get_api_response(session, block_id)
+                        for block_id in stack_id]
+            response = await asyncio.gather(*requests)
+            for _ in range(current_len_stack_id):
+                stack_id.pop(0)
+            for i in response:
+                get_results(i, stack_id, all_data, parent, titles)
 
     with open('db.json', 'w', encoding='utf8') as f:
         json.dump(all_data, f, ensure_ascii=False, indent=4)
 
 
-def parser():
-    asyncio.run(get_data())
-    logger.debug('Данные успешно собраны.')
-
-
-if __name__ == "__main__":
-    start = time()
-    parser()
-    logger.debug('Данные успешно собраны.')
-    finish = time()
-    logger.debug(finish - start)
+if __name__ == '__main__':
+    asyncio.get_event_loop().run_until_complete(main())
