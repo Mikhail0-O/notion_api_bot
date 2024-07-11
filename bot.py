@@ -95,7 +95,7 @@ def main():
     @bot.message_handler(commands=['parse_data'])
     def parse_new_data(message):
         message_for_allowed_users = ('Идет процесс сбора данных...'
-                                     'Это может занять несколько минут.')
+                                     'Это может занять несколько секунд.')
         message_for_any_users = ('Команда не существует.')
         massege_parse_data_complete = 'Данные успешно собраны.'
         massege_parse_data_error = 'Данные не собраны.'
