@@ -129,7 +129,6 @@ async def parse_data():
     titles = []
     async with aiohttp.ClientSession() as session:
         while stack_id:
-            print(stack_id)
             current_len_stack_id = len(stack_id)
             requests = [get_api_response(session, block_id)
                         for block_id in stack_id]
