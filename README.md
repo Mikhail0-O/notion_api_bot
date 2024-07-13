@@ -26,11 +26,17 @@ git clone https://github.com/Mikhail0-O/notion_api_bot.git
 
 cd notion_api_bot
 ```
-Cоздать и активировать виртуальное окружение:
+Cоздать виртуальное окружение:
 ```
 python -m venv venv
-
+```
+Активировать виртуальное окружение (Windows):
+```
 source venv/Scripts/activate
+```
+Активировать виртуальное окружение (Linux/MacOS):
+```
+source venv/bin/activate
 ```
 Установить зависимости из файла requirements.txt:
 ```
