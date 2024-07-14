@@ -10,7 +10,8 @@ from settings import PRIORITY_OF_GROUPS
 
 def get_random_card():
 
-    engine = create_engine('sqlite:///data.db')
+    # engine = create_engine('sqlite:////data/data.db')
+    engine = create_engine('sqlite:///data/data.db')
 
     # Создание сессии
     Session = sessionmaker(bind=engine)

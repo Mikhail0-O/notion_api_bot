@@ -28,6 +28,9 @@ TELEGRAM_CHAT_BOT_ID = os.getenv('TELEGRAM_CHAT_BOT_ID')
 
 PRIORITY_OF_GROUPS = (1, 1, 1, 2, 2, 3)
 
+# для обработки поля 'created_time'
+DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
+
 # Логирование
 LOG_FORMAT = '%(asctime)s, %(levelname)s, %(message)s, %(name)s'
 LOG_FORMATER = logging.Formatter(LOG_FORMAT)
@@ -35,7 +38,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 rotating_file_handler = logging.handlers.RotatingFileHandler(
-    'main.log',
+    # '/data/main.log',
+    'data/main.log',
     maxBytes=10000000,
     backupCount=5,
     encoding='utf-8'

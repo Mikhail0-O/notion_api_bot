@@ -2,16 +2,18 @@ import json
 import asyncio
 from itertools import count
 from http import HTTPStatus
+from time import strptime, mktime
 
 import aiohttp
 
 
 from settings import (NOTION_DATABASE_ID,
-                      HEADERS, logger)
+                      HEADERS, DATE_FORMAT, logger)
 from async_timed import async_timed
 
 
 autoincrement = count(start=1)
+# autoincrement_2 = count(start=1)
 
 
 def get_results(response, stack_id, all_data, parent, titles):
@@ -21,6 +23,12 @@ def get_results(response, stack_id, all_data, parent, titles):
 
     for result in results:
         data = {}
+
+        # для сортировки по "created_time": "2022-03-01T19:05:00.000Z"
+        if result.get('created_time'):
+            created_time = int(mktime(strptime(result.get('created_time'),
+                                               DATE_FORMAT)))
+            data.update(created_time=created_time)
 
         # Обработка дочерней страницы
         if result.get('child_page'):
@@ -58,8 +66,7 @@ def get_results(response, stack_id, all_data, parent, titles):
 
         # Достаем content и title
         if result.get('callout'):
-            card_number = next(autoincrement)
-            data.update(card_number=card_number)
+            data.update(block_id=result.get('id'))
             current_title_index = next(
                 i for i, parent_list in enumerate(parent)
                 if parent_list[-1] == result.get('parent').get('page_id')
@@ -138,7 +145,15 @@ async def parse_data():
             for i in response:
                 get_results(i, stack_id, all_data, parent, titles)
 
-    with open('db.json', 'w', encoding='utf8') as f:
+    all_data.sort(key=lambda x: (x.get('title'), x.get('created_time')))
+    for data in all_data:
+        card_number = next(autoincrement)
+        data.update(card_number=card_number)
+
+    # with open('/data/db.json', 'w', encoding='utf8') as f:
+    #     json.dump(all_data, f, ensure_ascii=False, indent=4)
+
+    with open('data/db.json', 'w', encoding='utf8') as f:
         json.dump(all_data, f, ensure_ascii=False, indent=4)
 
 
