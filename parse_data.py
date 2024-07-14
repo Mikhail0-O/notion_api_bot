@@ -13,7 +13,6 @@ from async_timed import async_timed
 
 
 autoincrement = count(start=1)
-# autoincrement_2 = count(start=1)
 
 
 def get_results(response, stack_id, all_data, parent, titles):
