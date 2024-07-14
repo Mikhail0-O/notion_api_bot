@@ -12,8 +12,6 @@ from settings import (NOTION_DATABASE_ID,
 from async_timed import async_timed
 
 
-
-
 def get_results(response, stack_id, all_data, parent, titles):
     """Обработка результатов запроса."""
     results = response.get('results', [])
