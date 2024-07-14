@@ -14,3 +14,4 @@ class Data(Base):
     code = Column(String, nullable=True)
     URL = Column(String, nullable=False)
     group = Column(String, nullable=True)
+    block_id = Column(String, nullable=True)
