@@ -12,7 +12,6 @@ from settings import (NOTION_DATABASE_ID,
 from async_timed import async_timed
 
 
-autoincrement = count(start=1)
 
 
 def get_results(response, stack_id, all_data, parent, titles):
@@ -133,6 +132,7 @@ async def parse_data():
     all_data = []
     parent = []
     titles = []
+    autoincrement = count(start=1)
     async with aiohttp.ClientSession() as session:
         while stack_id:
             current_len_stack_id = len(stack_id)
