@@ -7,6 +7,7 @@ from data_base import Data
 def change_group(new_group, card_number):
 
     engine = create_engine('sqlite:///data.db')
+    # engine = create_engine('sqlite:////data/data.db')
 
     # Создание сессии
     Session = sessionmaker(bind=engine)
