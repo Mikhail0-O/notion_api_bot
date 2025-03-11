@@ -13,7 +13,7 @@
 
 ### ⚙️ Используемые технологии<a id="technologies-project"></a>:
 ![Python 3.12](https://img.shields.io/badge/Python-3.12-brightgreen.svg?style=flat&logo=python&logoColor=white)
-[![SQLAlchemy](https://img.shields.io/pypi/v/sqlalchemy)](https://pypi.org/project/SQLAlchemy/)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-brightgreen.svg)
 ![pyTelegramBotAPI](https://img.shields.io/badge/pyTelegramBotAPI-4.14-brightgreen.svg)
 
 ### Работа
