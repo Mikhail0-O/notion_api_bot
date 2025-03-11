@@ -13,6 +13,7 @@
 
 ### ⚙️ Стек
 ![Python 3.12](https://img.shields.io/badge/Python-3.12-brightgreen.svg?style=flat&logo=python&logoColor=white)
+![Python 3.12](https://img.shields.io/badge/SQLAlchemy-2.0-brightgreen.svg)
 
 ### Работа
 ![1](https://github.com/Mikhail0-O/notion_api_bot/assets/156952363/3e5e6b01-a9f3-4b7c-acde-46e456883324)
