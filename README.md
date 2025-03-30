@@ -3,10 +3,8 @@
 1. 🤖 [Описание](#introduction)
 2. ⚙️ [Технологии](#tech-stack)
 3. 🚀 [Аутентификация](#auth)
-4. 🤸 [Как запустить проект](#start-project)
-5. 🕸️ [Code to Copy](#snippets)
-6. 🔗 [Assets](#links)
-7. 🚀 [More](#more)
+4. 🕸️ [Работа](#work)
+5. 🤸 [Как запустить проект](#start-project)
 
 ## 🤖 <a name="introduction">Описание</a>
 Телеграм-бот с использованием Notion API для подготовки к собеседованиям.
@@ -27,7 +25,7 @@
 ![pyTelegramBotAPI](https://img.shields.io/badge/pyTelegramBotAPI-4.14-brightgreen.svg)
 ![aiohttp](https://img.shields.io/badge/aiohttp-3.9-brightgreen.svg)
 
-## <a name="snippets">🕸️ Работа</a>
+## <a name="work">🕸️ Работа</a>
 
 <details>
 <summary>Скриншоты</summary>
