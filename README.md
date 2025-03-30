@@ -30,7 +30,7 @@
 <details>
 <summary>Скриншоты</summary>
 
-  <img src="https://github.com/Mikhail0-O/notion_api_bot/assets/156952363/3e5e6b01-a9f3-4b7c-acde-46e456883324" width="10">
+  <img src="https://github.com/Mikhail0-O/notion_api_bot/assets/156952363/3e5e6b01-a9f3-4b7c-acde-46e456883324" width="100" style="float:left;">
   
   ![1](https://github.com/Mikhail0-O/notion_api_bot/assets/156952363/3e5e6b01-a9f3-4b7c-acde-46e456883324)
   ![2](https://github.com/Mikhail0-O/notion_api_bot/assets/156952363/f0347fc2-40d6-4c79-9d98-ad790961a696)
