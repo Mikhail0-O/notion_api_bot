@@ -43,25 +43,25 @@
 
 ## 🤸 Как запустить проект
 Клонировать репозиторий и перейти в него в командной строке:
-```
+```bash
 git clone https://github.com/Mikhail0-O/notion_api_bot.git
 
 cd notion_api_bot
 ```
 Cоздать виртуальное окружение:
-```
+```bash
 python -m venv venv
 ```
 Активировать виртуальное окружение (Windows):
-```
+```bash
 source venv/Scripts/activate
 ```
 Активировать виртуальное окружение (Linux/MacOS):
-```
+```bash
 source venv/bin/activate
 ```
 Установить зависимости из файла requirements.txt:
-```
+```bash
 python -m pip install --upgrade pip
 
 pip install -r requirements.txt
