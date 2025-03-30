@@ -2,7 +2,7 @@
 
 1. 🤖 [Описание](#introduction)
 2. ⚙️ [Технологии](#tech-stack)
-3. 🔋 [Features](#features)
+3. 🚀 [Аутентификация](#auth)
 4. 🤸 [Quick Start](#quick-start)
 5. 🕸️ [Code to Copy](#snippets)
 6. 🔗 [Assets](#links)
@@ -38,7 +38,7 @@
 
 </details>
 
-## 🚀 Аутентификация
+## 🚀 Аутентификация <a name="auth"><a/>
 Для работы с конспектами Notion надо получить интеграционный токен и получить id базы данных согласно документации к Notion API: https://developers.notion.com/docs/getting-started
 
 ## 🤸 Как запустить проект
