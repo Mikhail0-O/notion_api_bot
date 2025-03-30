@@ -41,7 +41,7 @@
 
 ## 🤸 Как запустить проект <a name="start-project"></a>
 Клонировать репозиторий и перейти в него в командной строке:
-```bash
+```sh
 git clone https://github.com/Mikhail0-O/notion_api_bot.git
 
 cd notion_api_bot
