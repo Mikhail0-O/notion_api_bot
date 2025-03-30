@@ -17,7 +17,7 @@
 ![pyTelegramBotAPI](https://img.shields.io/badge/pyTelegramBotAPI-4.14-brightgreen.svg)
 ![aiohttp](https://img.shields.io/badge/aiohttp-3.9-brightgreen.svg)
 
-## <a name="snippets">🕸️ Работа</a>
+### <a name="snippets">🕸️ Работа</a>
 
 <details>
 <summary><code>Скриншоты</code></summary>
