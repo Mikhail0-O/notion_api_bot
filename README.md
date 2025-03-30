@@ -1,7 +1,7 @@
 ## 📋 <a name="table">Содержание</a>
 
 1. 🤖 [Описание](#introduction)
-2. ⚙️ [Tech Stack](#tech-stack)
+2. ⚙️ [Технологии](#tech-stack)
 3. 🔋 [Features](#features)
 4. 🤸 [Quick Start](#quick-start)
 5. 🕸️ [Code to Copy](#snippets)
@@ -21,7 +21,7 @@
 Группа 2 — карточки, которые пользователь немного помнит. Встречаются реже.
 Группа 3 — карточки, информацию из которых пользователь помнит лучше всего. Встречаются ещё реже.
 
-## ⚙️ Используемые технологии<a id="technologies-project"></a>:
+## ⚙️ Технологии<a id="tech-stack"></a>:
 ![Python 3.12](https://img.shields.io/badge/Python-3.12-brightgreen.svg?style=flat&logo=python&logoColor=white)
 ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-brightgreen.svg)
 ![pyTelegramBotAPI](https://img.shields.io/badge/pyTelegramBotAPI-4.14-brightgreen.svg)
